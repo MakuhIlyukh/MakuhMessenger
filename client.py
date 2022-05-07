@@ -4,15 +4,19 @@ from threading import Thread, Event
 from select import select
 from warnings import warn
 
-#server address
+
+# server address
 HOST = '127.0.0.1'
 PORT = 28344
+
 
 def disable(elem):
     elem.config(state=tk.DISABLED)
 
+
 def enable(elem):
     elem.config(state=tk.NORMAL)
+
 
 class Chat_window:
     def __handle_readable(self):
@@ -28,7 +32,6 @@ class Chat_window:
                 self.exit_event.set()
                 self.com_sender.send(b'q')
 
-
     def __handle_writable(self):
         warn('реализуй')
 
@@ -41,7 +44,7 @@ class Chat_window:
         com_listener.setblocking(False)
         com_listener.listen()
         return com_listener
-    
+
     def __create_com_sender(self):
         com_sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         com_sender.connect((COM_LISTENER_HOST, COM_LISTENER_PORT))
@@ -58,16 +61,21 @@ class Chat_window:
         self.outputs = []
 
         self.exit_event = Event()
-        
+
         while True:
-            self.readable, self.writable, self.exceptional = select(self.inputs, self.outputs, self.inputs)
+            (self.readable,
+             self.writable,
+             self.exceptional) = select(self.inputs,
+                                        self.outputs,
+                                        self.inputs)
             if self.exit_event.is_set():
                 break
             self.__handle_readable()
             self.__handle_writable()
             self.__handle_exceptional()
 
-        for elem in [self.server, self.com_listener, self.com_sender, self.com_con]:
+        for elem in [self.server, self.com_listener,
+                     self.com_sender, self.com_con]:
             elem.close()
 
     def __init__(self, username):
@@ -80,23 +88,24 @@ class Chat_window:
         self.f_top.pack()
         self.f_bot.pack()
 
-        #Text
+        # Text
         self.txtbox = tk.Text(self.f_top, width=50, height=10)
         self.txtbox.pack(side=tk.LEFT)
         disable(self.txtbox)
 
-        #scroll
+        # scroll
         self.scroll = tk.Scrollbar(self.f_top, command=self.txtbox.yview)
         self.scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.txtbox.config(yscrollcommand=self.scroll.set)
-        
+
         # Entry
         self.entry = tk.Entry(self.f_bot, width=50)
         self.entry.pack(side=tk.LEFT)
 
-        #send Button
-        self.send_btn = tk.Button(self.f_bot, text='Send', width=10, height=1, command=self.__send_btn_click)        
-        self.send_btn.pack(side=tk.LEFT)    
+        # send Button
+        self.send_btn = tk.Button(self.f_bot, text='Send', width=10,
+                                  height=1, command=self.__send_btn_click)
+        self.send_btn.pack(side=tk.LEFT)
 
         # connect to server
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -106,7 +115,6 @@ class Chat_window:
         # start connection thread
         con_thread = Thread(target=self.__tarfun)
         con_thread.start()
-
 
         self.window.mainloop()
 
@@ -135,11 +143,13 @@ class Name_window:
             self.username = self.txtbox.get()
             self.window.destroy()
 
-        self.button = tk.Button(self.window, text='GO', command=go_button_click)
+        self.button = tk.Button(self.window, text='GO',
+                                command=go_button_click)
         self.button.pack()
 
         self.username = None
         self.window.mainloop()
+
 
 def choose_port():
     with open('port.txt', 'r') as f:
@@ -150,7 +160,7 @@ def choose_port():
         else:
             flag = 0
             port = 17452
-    
+
     with open('port.txt', 'w') as f:
         f.write(str(flag))
 

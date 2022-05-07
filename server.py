@@ -1,13 +1,18 @@
 '''
 Сервер для чата
 '''
+
+
 import socket
 from select import select
 from queue import Queue
 from queue import Empty
 from threading import Thread, Event
+
+
 HOST = '127.0.0.1'
 PORT = 28344
+
 
 def open_prepare_server_socket():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,13 +21,16 @@ def open_prepare_server_socket():
     sock.listen(10)
     return sock
 
+
 def access_event(s):
     '''if need to access'''
     return s is sock
 
+
 def close_event(data):
     '''if need to close the connection'''
     return not bool(data)
+
 
 def create_new_connection():
     '''sock - main socket'''
@@ -32,6 +40,7 @@ def create_new_connection():
     client_socks.append(conn)
     message_queues[conn] = Queue()
     print('new connection was created')
+
 
 def close_connection(s):
     '''s not is sock!'''
@@ -43,14 +52,16 @@ def close_connection(s):
     message_queues.pop(s, None)
     print('connection was closed')
 
+
 def handle_input_message(s, data):
     '''we have input message in data, let's handle it'''
     global outputs
     for key in client_socks:
-        if not key is s:
+        if key is not s:
             message_queues[key].put(data)
     outputs = client_socks.copy()
     print('message was recieved')
+
 
 def send_msg(s):
     '''if there is message in queue, we send it'''
@@ -61,6 +72,7 @@ def send_msg(s):
     else:
         s.send(next_msg)
         print('message was sent')
+
 
 def handle_readable():
     for s in readable:
@@ -73,24 +85,28 @@ def handle_readable():
             else:
                 handle_input_message(s, data)
 
+
 def handle_writable():
     for s in writable:
         send_msg(s)
+
 
 def handle_exceptional():
     for s in exceptional:
         inputs.remove(s)
         if s in outputs:
             outputs.remove(s)
-        if not s is sock:
+        if s is not sock:
             client_socks.remove(s)
         message_queues.pop(s, None)
         s.close()
+
 
 def close_all_sockets():
     for s in client_socks:
         s.close()
     sock.close()
+
 
 def start_keyboard_input_thread():
     def tarfun():
@@ -106,7 +122,7 @@ def start_keyboard_input_thread():
 
     keyboard_input_thread = Thread(target=tarfun)
     keyboard_input_thread.start()
-        
+
 
 if __name__ == '__main__':
     sock = open_prepare_server_socket()
@@ -117,7 +133,7 @@ if __name__ == '__main__':
     # нужно для того, чтобы прервать select(если захотим завершить сервер)
     quit_event = Event()
     start_keyboard_input_thread()
-    
+
     while True:
         print('iteration')
         readable, writable, exceptional = select(inputs, outputs, inputs)
